@@ -1,0 +1,169 @@
+pom.xml
+<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+</dependency>
+
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.username=abc
+spring.datasource.password=abc
+spring.datasource.driver-class-name=org.h2.Driver
+
+
+http://localhost:8080/h2-console
+url jdbc:h2:mem:testdb 
+username abc
+password abc
+
+
+
+==============================
+package in.ashokit.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+import lombok.Data;
+
+@Data
+@Entity
+public class Product {
+
+	@Id
+	@GeneratedValue
+	private Integer pid;
+	private String name;
+	private Double price;
+	private Integer qty;
+}
+================================
+package in.ashokit.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import in.ashokit.entity.Product;
+import in.ashokit.repo.ProductRepository;
+
+@Controller
+public class ProductController {
+ 
+	@Autowired
+	ProductRepository repo;
+	@GetMapping("/")
+	public String loadForm(Model model)
+	{
+		model.addAttribute("p",new Product());
+		return "index";
+	}
+	@PostMapping("/product")
+	public String handleSave(@ModelAttribute("p") Product p,Model model) {
+		
+		p=repo.save(p);
+		if(p.getPid()!=null)
+		{
+			model.addAttribute("msg","Product saved");
+		}
+
+		
+		return "index";
+	}
+	@GetMapping("/products")
+	public String findAll(Model model)
+	{
+		model.addAttribute("products",repo.findAll());
+		return "data";
+	}
+}
+=================================================
+package in.ashokit.repo;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import in.ashokit.entity.*;
+public interface ProductRepository 
+extends JpaRepository<Product,Integer>{
+
+}
+=================================================
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<body>
+		<h2>Store Products</h2>
+		<p><font color="green">${msg }</font>
+		<form:form action="product" modelAttribute="p"  method="POST">
+		
+			<table>
+			   <tr>
+			         <td>Name: </td>
+			         <td><form:input path="name"/></td>
+			   </tr>
+			    <tr>
+			         <td>Price: </td>
+			         <td><form:input path="price"/></td>
+			   </tr>
+			    <tr>
+			         <td>Quantity: </td>
+			         <td><form:input path="qty"/></td>
+			   </tr>
+			   <tr>
+			       <td> <input type="submit" value="save"/> </td>
+			   </tr>
+			</table>
+		</form:form>
+		<a href="products">View Products</a>
+</body>
+</html>
+==========================================
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<body>
+ <a href="/">Home page </a>
+   <table>
+        <thead>
+        <tr>
+             <th>S.No</th>
+             <th>Name</th>
+             <th>Price</th>
+             <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+        <!-- From collection take one item from items and store in var -->
+        	<c:forEach items="${products}" var="product" varStatus="index">
+        			
+        			<tr>
+        				<td>${index.count}</td>
+        				<td>${product.name}</td>
+        				<td>${product.price}</td>
+        				<td>${product.qty}</td>
+        			</tr>
+        	</c:forEach>
+        	
+        </tbody>
+   </table>
+
+</body>
+</html>
